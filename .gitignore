@@ -125,9 +125,12 @@ dmypy.json
 # macOS files
 .DS_Store
 
-# PyCharm files
-.idea/
-
 # CTags files
 tags
 ctags
+
+# VSCode files
+.vscode/
+
+# PyCharm files
+.idea/
