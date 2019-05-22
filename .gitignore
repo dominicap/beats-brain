@@ -121,3 +121,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# macOS files
+.DS_Store
+
+# PyCharm files
+.idea/
+
+# CTags files
+tags
+ctags
