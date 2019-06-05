@@ -1,8 +1,16 @@
+import requests
+
+from pprint import pprint
+
 from lib.data import auth
+from lib.data import search
 
 
 def main():
-    print(auth.get_token())
+    token = auth.get_token()
+    query = input('Please enter a track name: ')
+
+    results = search.search_track(token, query)
 
 
 if __name__ == '__main__':

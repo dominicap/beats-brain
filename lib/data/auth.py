@@ -15,7 +15,7 @@ def get_token():
     client_id = keys.KEYS['spotify_client_id']
     client_secret = keys.KEYS['spotify_client_secret']
 
-    username = input("Enter your Spotify user name: ")
+    username = input('Enter your Spotify user name: ')
     redirect_uri = 'https://spotify.com'
 
     token = util.prompt_for_user_token(username=username,
