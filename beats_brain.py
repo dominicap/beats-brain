@@ -10,7 +10,7 @@ def main():
 
     index = 1
     for item in search_results['tracks']['items']:
-        print(str(index) + ": " + item['name'] + /
+        print(str(index) + ": " + item['name'] + \
               " - " + item['album']['artists'][0]['name'])
         index += 1
 
