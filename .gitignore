@@ -119,7 +119,10 @@ venv.bak/
 dmypy.json
 
 # Key files
-.keys/
+lib/util/keys.py
+
+# Spotipy files
+.cache*
 
 # Pyre type checker
 .pyre/
