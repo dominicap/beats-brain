@@ -4,7 +4,10 @@ from lib.data import search
 
 def main():
     token = auth.get_token()
+
     query = input('Search for a track: ')
+    while not query:
+        query = input('Search for a track: ')
 
     search_results = search.search_track(token, query)
 

@@ -121,6 +121,9 @@ dmypy.json
 # Key files
 lib/util/keys.py
 
+# database files
+*.db
+
 # Spotipy files
 .cache*
 
