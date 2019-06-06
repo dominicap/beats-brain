@@ -4,7 +4,7 @@ from lib.data import search
 
 def main():
     token = auth.get_token()
-    query = input('Please enter a track name: ')
+    query = input('Search for a track: ')
 
     search_results = search.search_track(token, query)
 
