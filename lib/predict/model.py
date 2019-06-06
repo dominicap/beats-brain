@@ -1,52 +1,121 @@
 import ijson
-import numpy
-from keras.models import Sequential
+from IPython import embed
+from matplotlib import colors
+from matplotlib import pyplot as plt
+from sklearn import datasets
+import numpy as np
+import tensorflow as tf
+from sklearn.utils.fixes import logsumexp
+import numpy as np
+import json
+
+
+#naive bayes classifer using tensorflow
+class TFNaiveBayesClassifier:
+    dist = None
+
+
+    #read in the json files into python
+    def read_json_track(filename):
+        obj = json.loads(filename.decode('utf-8'))
+        track = obj['track']
+        return np.array([track['tempo'],track['loudness']], dtype = 'f')
+
+    def read_json_bars(filename, time):
+        obj = json.loads(filename.decode('utf-8'))
+        bars = obj['bars']
+        return np.array([bars[time]['confidence']])
+
+    #input either the result the json read methods
+    def python_to_tensor(input):
+        raw = tf.placeholder(tf.string, [None])
+        return [parsed] = tf.py_func(input, [raw], [tf.float32])
 
 
 
 
-filename = "song_list.json"
-with open(filename, 'r') as f:
-objects = ijson.items(f, 'meta.view.columns.item')
-
-data = list(objects)
-labels = ['match', 'no match']
-
-for j in data.columns[:-1]:
-    mean = data[j].mean()
-    data[j] = data[j].replace(0,mean)
-    data[j] = pd.cut(data[j],bins=len(labels), labels = labels)
+#the rest is currently unmodified naive bayes classifer
 
 
-def count(data, colname, label, target):
-    condition = (data[colname] == label) & (data['Outcome'] == target)
-    return len(data[condition])
+    def fit(self, X, y):
+        # Separate training points by class (nb_classes * nb_samples * nb_features)
+        unique_y = np.unique(y)
+        points_by_class = np.array([
+            [x for x, t in zip(X, y) if t == c]
+            for c in unique_y])
 
-probabilities = {0: {}, 1:{}}
+        # Estimate mean and variance for each class / feature
+        # shape: nb_classes * nb_features
+        mean, var = tf.nn.moments(tf.constant(points_by_class), axes=[1])
 
-train_percent = 75
-train_len = int((train_percent*len(data))/100)
-train_x = data.iloc[:train_len,:]
+        # Create a 3x2 univariate normal distribution with the 
+        # known mean and variance
+        self.dist = tf.distributions.Normal(loc=mean, scale=tf.sqrt(var))
 
-test_x = data.iloc[train_len+1:,:-1]
-test_y = data.iloc[train_len+1:,-1]
+    def predict(self, X):
+        assert self.dist is not None
+        nb_classes, nb_features = map(int, self.dist.scale.shape)
 
-count_0 = count(train_x, 'Outcome', 0,0)
-count_1 = count(train_x, 'Outcome',1,1)
+        # Conditional probabilities log P(x|c) with shape
+        # (nb_samples, nb_classes)
+        cond_probs = tf.reduce_sum(
+            self.dist.log_prob(
+                tf.reshape(
+                    tf.tile(X, [1, nb_classes]), [-1, nb_classes, nb_features])),
+            axis=2)
 
-prob_0 = count_0/len(train_x)
-prob_1 = count_1/len(train_x)
+        # uniform priors
+        priors = np.log(np.array([1. / nb_classes] * nb_classes))
 
-for col in train_x.columns[:-1]:
-    probabilities[0][col] = {}
-    probabilities[0][col] = {}
+        # posterior log probability, log P(c) + log P(x|c)
+        joint_likelihood = tf.add(priors, cond_probs)
 
-    for category in labels:
-        count_ct_0 = count(train_x, col, category, 0)
-        count_ct_1 = count(train_x,col,category,1)
+        # normalize to get (log)-probabilities
+        norm_factor = tf.reduce_logsumexp(
+            joint_likelihood, axis=1, keep_dims=True)
+        log_prob = joint_likelihood - norm_factor
+        # exp to get the actual probabilities
+        return tf.exp(log_prob)
 
-        probabilities[0][col][category] = count_ct_0 / count_0
-        probabilities[1][col][category] = count_ct_1 / count_1
 
+if __name__ == '__main__':
+    iris = datasets.load_iris()
+    # Only take the first two features
+    X = iris.data[:, :2]
+    y = iris.target
 
+    tf_nb = TFNaiveBayesClassifier()
+    tf_nb.fit(X, y)
+    
+    # Create a regular grid and classify each point
+    x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+    y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 30),
+                         np.linspace(y_min, y_max, 30))
+    s = tf.Session()
+    Z = s.run(tf_nb.predict(np.c_[xx.ravel(), yy.ravel()]))
+    # Extract probabilities of class 2 and 3
+    Z1 = Z[:, 1].reshape(xx.shape)
+    Z2 = Z[:, 2].reshape(xx.shape)
+
+    # Plot
+    fig = plt.figure(figsize=(5, 3.75))
+    ax = fig.add_subplot(111)
+
+    ax.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Set1,
+                edgecolor='k')
+    # Swap signs to make the contour dashed (MPL default)
+    ax.contour(xx, yy, -Z1, [-0.5], colors='k')
+    ax.contour(xx, yy, -Z2, [-0.5], colors='k')
+
+    ax.set_xlabel('Sepal length')
+    ax.set_ylabel('Sepal width')
+    ax.set_title('TensorFlow decision boundary')
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xticks(())
+    ax.set_yticks(())
+
+    plt.tight_layout()
+fig.savefig('tf_iris.png', bbox_inches='tight')
 
