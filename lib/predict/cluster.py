@@ -1,17 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 import sqlite3
 
-from pprint import pprint
 from sklearn.cluster import AgglomerativeClustering
 
 
 def main():
-    dataframe = dataframe_from_database('db/billboard-200.db',
-                                        'acoustic_features')
+    dataframe = dataframe_from_database('db/billboard-200.db', 'acoustic_features')
+    dataframe = dataframe.dropna()
 
-    pprint(dataframe.iloc[:1])
+    print(len(dataframe))
 
 
 def dataframe_from_database(database, table):
