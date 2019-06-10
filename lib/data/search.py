@@ -31,6 +31,15 @@ def search_track_features(token, track_id):
         return response.json()
 
 
+def search_artist_analysis(token, artist_id):
+    if token:
+        headers = {'Authorization': "Bearer " + token}
+        url = "https://api.spotify.com/v1/artists/" + artist_id
+
+        response = requests.get(url=url, headers=headers)
+        return response.json()
+
+
 def search_artist_genres(token, track_id):
     analysis = search_track_analysis(token, track_id)
     # Finish this
