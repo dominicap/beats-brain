@@ -29,3 +29,8 @@ def search_track_features(token, track_id):
 
         response = requests.get(url=url, headers=headers)
         return response.json()
+
+
+def search_artist_genres(token, track_id):
+    analysis = search_track_analysis(token, track_id)
+    # Finish this

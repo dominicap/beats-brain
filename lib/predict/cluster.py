@@ -11,7 +11,7 @@ from sklearn.cluster import AgglomerativeClustering
 def main():
     dataframe = dataframe_from_database('db/billboard-200.db',
                                         'acoustic_features')
-    dataframe.index = dataframe['song'] + ' ' + dataframe['artist']
+    dataframe.index = dataframe['song'] + ' - ' + dataframe['artist']
 
     dataframe = dataframe.dropna()
 
