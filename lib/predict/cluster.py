@@ -8,6 +8,12 @@ import sys
 
 from sklearn import preprocessing
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.externals import joblib
+from azureml.core import Workspace
+from azureml.core.model import Model
+
+
+ws = Workspace.get(name="beatsBrain-local", subscription_id='66f8937f-1057-4155-aefd-52c32c7de0d5', resource_group='beats-brain')
 
 library = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.append(library)
@@ -30,6 +36,11 @@ def cluster(token):
 
     cluster = AgglomerativeClustering(n_clusters=(int(len(sample) * 0.5)))
     cluster.fit(sample)
+
+    joblib.dump(value=cluster, filename="cluster.pkl")
+
+    model = Model.register(workspace=ws, model_path="cluster.pkl", model_name="cluster")
+    model.download(target_dir=os.getcwd(),exist_ok = True)
 
     sample['labels'] = cluster.labels_
 

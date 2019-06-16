@@ -7,7 +7,8 @@ from lib.predict import cluster
 def main():
     token = auth.get_token()
 
-    cluster.cluster(token)
+    cluster.azure_deploy(cluster.cluster(token))
+
 
     # query = input('Search for a track: ')
     # while not query:
