@@ -8,22 +8,20 @@ import sys
 
 from sklearn import preprocessing
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.mixture import GaussianMixture as mixture
 from sklearn.externals import joblib
+
 from azureml.core import Workspace
 from azureml.core.model import Model
-
-from sklearn.mixture import GaussianMixture as mixture
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
-
-
 
 ws = Workspace.get(name="beatsBrain-local4", subscription_id='66f8937f-1057-4155-aefd-52c32c7de0d5', resource_group='beats-brain')
 library = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.append(library)
 
 import data.search as search
+
+
+from pprint import pprint
 
 
 def cluster(token, sample):
@@ -38,6 +36,7 @@ def cluster(token, sample):
 
     return cluster
 
+
 def sample(token):
     storage = pd.HDFStore('models/dataframes/preprocessed_dataframe.h5')
 
@@ -49,18 +48,16 @@ def sample(token):
 
     dataframe = pd.read_hdf('models/dataframes/preprocessed_dataframe.h5')
 
-    sample = dataframe.sample(frac=0.25)
+    pprint(dataframe)
 
-    return sample
-
+    return dataframe
 
 
 def azure_deploy(token):
-    result = null
+    result = None
     joblib.dump(value=token, filename="cluster.pkl")
-
     model = Model.register(workspace=ws, model_path="cluster.pkl", model_name="cluster")
-    #result = Model.deploy_from_model(beatsBrain-local4, model)
+    result = Model.deploy_from_model(beatsBrain-local4, model)
     return result
 
 def azure_download(model):
