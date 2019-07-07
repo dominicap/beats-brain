@@ -57,7 +57,6 @@ def azure_deploy(token):
     result = None
     joblib.dump(value=token, filename="cluster.pkl")
     model = Model.register(workspace=ws, model_path="cluster.pkl", model_name="cluster")
-    result = Model.deploy_from_model(beatsBrain-local4, model)
     return result
 
 def azure_download(model):
