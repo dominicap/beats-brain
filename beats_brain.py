@@ -6,10 +6,14 @@ from lib.predict import cluster
 
 def main():
     token = auth.get_token()
+    sample = cluster.sample(token)
+    model = cluster.cluster(token, sample)
+    azure_model = cluster.azure_deploy(model)
 
-    cluster.azure_deploy(cluster.cluster(token))
-
-
+    #local_cluster = cluster.azure_download(azure_model)
+    
+    #cluster.findAIC(sample)
+    
     # query = input('Search for a track: ')
     # while not query:
     #     query = input('Search for a track: ')

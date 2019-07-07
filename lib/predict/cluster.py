@@ -12,16 +12,33 @@ from sklearn.externals import joblib
 from azureml.core import Workspace
 from azureml.core.model import Model
 
+from sklearn.mixture import GaussianMixture as mixture
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
-ws = Workspace.get(name="beatsBrain-local", subscription_id='66f8937f-1057-4155-aefd-52c32c7de0d5', resource_group='beats-brain')
 
+
+ws = Workspace.get(name="beatsBrain-local4", subscription_id='66f8937f-1057-4155-aefd-52c32c7de0d5', resource_group='beats-brain')
 library = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.append(library)
 
 import data.search as search
 
 
-def cluster(token):
+def cluster(token, sample):
+    
+    cluster = AgglomerativeClustering(n_clusters=(findAIC(sample)))
+    cluster.fit(sample)
+
+    sample['labels'] = cluster.labels_
+
+    sample = sample.sort_values(by=['labels'])
+    sample.to_csv('models/samples/sample.csv')
+
+    return cluster
+
+def sample(token):
     storage = pd.HDFStore('models/dataframes/preprocessed_dataframe.h5')
 
     dataframe = __dataframe_from_database('lib/predict/db/billboard-200.db', 'acoustic_features')
@@ -34,19 +51,20 @@ def cluster(token):
 
     sample = dataframe.sample(frac=0.25)
 
-    cluster = AgglomerativeClustering(n_clusters=(int(len(sample) * 0.5)))
-    cluster.fit(sample)
+    return sample
 
-    joblib.dump(value=cluster, filename="cluster.pkl")
+
+
+def azure_deploy(token):
+    result = null
+    joblib.dump(value=token, filename="cluster.pkl")
 
     model = Model.register(workspace=ws, model_path="cluster.pkl", model_name="cluster")
-    model.download(target_dir=os.getcwd(),exist_ok = True)
+    #result = Model.deploy_from_model(beatsBrain-local4, model)
+    return result
 
-    sample['labels'] = cluster.labels_
-
-    sample = sample.sort_values(by=['labels'])
-    sample.to_csv('models/samples/sample.csv')
-
+def azure_download(model):
+    return model.download(target_dir=os.getcwd(), exist_ok = True)
 
 def __preprocessd_dataframe(dataframe, token):
     dataframe.index = dataframe['song'] + ' - ' + dataframe['artist']
@@ -90,3 +108,34 @@ def __dataframe_from_database(database, table):
     query = "SELECT * FROM" + " " + table
 
     return pd.read_sql_query(query, connection)
+
+def findAIC(sample):
+    length = (sample.shape)
+    range_n_clusters = range(1, len(sample))
+    aic_list = []
+
+    num_clusters = 1
+
+    for n_clusters in range_n_clusters:
+        model = mixture(n_components=n_clusters, init_params='kmeans')
+        model.fit(sample)
+        aic_list.append(model.aic(sample))
+
+    i = 0
+    while i < len(aic_list):
+        if (aic_list[i] == min(aic_list)):
+            num_clusters = i + 1
+        i += 1
+
+
+
+
+    #print(length)
+    #print(num_clusters)
+    #print(sample)
+    #print(range_n_clusters)
+    #print(aic_list)
+
+
+    return num_clusters
+
