@@ -36,7 +36,7 @@ sklearn==0.0
 spotipy==2.4.4
 tables==3.5.2
 tensorboard==1.13.1
-tensorflow==1.13.1
+tensorflow==2.7.2
 tensorflow-estimator==1.13.0
 termcolor==1.1.0
 typed-ast==1.4.0
